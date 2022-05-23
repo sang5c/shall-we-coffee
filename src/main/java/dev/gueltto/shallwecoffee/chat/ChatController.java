@@ -1,6 +1,7 @@
 package dev.gueltto.shallwecoffee.chat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.methods.SlackApiException;
 import lombok.RequiredArgsConstructor;
@@ -22,18 +23,13 @@ public class ChatController {
     private final SlackService slackService;
     private final ObjectMapper objectMapper;
 
-    @GetMapping("/hello")
-    public String hello() {
-        return "WORLD!";
-    }
-
-    @PostMapping("/ping")
+    @PostMapping("/test")
     public ResponseEntity<String> ping(@RequestParam Map<String, String> payload) throws IOException, SlackApiException {
         String payload1 = payload.get("payload");
 
         log.info("PARAMS: " + payload1);
 
-        Map<String, Object> params = objectMapper.readValue(payload1, Map.class);
+        Map<String, Object> params = objectMapper.readValue(payload1, new TypeReference<>() {});
         log.info("PARAMS: " + params);
 
         slackService.pingPong((String) params.get("trigger_id"));

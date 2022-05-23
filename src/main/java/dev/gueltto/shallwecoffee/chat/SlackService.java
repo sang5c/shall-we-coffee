@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
 
@@ -26,6 +27,11 @@ import static com.slack.api.model.view.Views.viewTitle;
 @Service
 public class SlackService {
     private MethodsClient slackClient = Slack.getInstance().methods(System.getenv("SLACK_BOT_TOKEN"));
+
+    @PostConstruct
+    public void tt() {
+        System.out.println(System.getenv("SLACK_BOT_TOKEN"));
+    }
 
     public List<SlackChannel> findChannels() throws SlackApiException, IOException {
         ConversationsListResponse response = slackClient.conversationsList(conversationsListRequestBuilder -> null);
@@ -53,7 +59,7 @@ public class SlackService {
     }
 
     /**
-     * https://api.slack.com/methods/views.open/code
+     * <a href="https://api.slack.com/methods/views.open/code">API DOCS</a>
      */
     public String pingPong(String triggerId) throws SlackApiException, IOException {
         View modalView = Views.view(v -> v
