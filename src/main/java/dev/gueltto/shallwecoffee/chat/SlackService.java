@@ -3,6 +3,7 @@ package dev.gueltto.shallwecoffee.chat;
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
+import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.conversations.ConversationsListResponse;
 import com.slack.api.methods.response.conversations.ConversationsMembersResponse;
 import com.slack.api.model.User;
@@ -81,5 +82,13 @@ public class SlackService {
         // Print result
         log.info("result: {}", result);
         return result.isOk() + "";
+    }
+
+    public boolean sendMessage(String channel, String message) throws SlackApiException, IOException {
+        ChatPostMessageResponse response = slackClient.chatPostMessage(requestBuilder -> requestBuilder.text(message)
+                .channel(channel)
+        );
+
+        return response.isOk();
     }
 }

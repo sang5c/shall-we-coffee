@@ -6,6 +6,9 @@ import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.view.View;
+import com.slack.api.model.view.ViewState;
+import dev.gueltto.shallwecoffee.chat.SlackService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
@@ -19,26 +22,41 @@ import static com.slack.api.model.block.composition.BlockCompositions.*;
 import static com.slack.api.model.block.element.BlockElements.*;
 import static com.slack.api.model.view.Views.*;
 
+@RequiredArgsConstructor
 @Slf4j
 @Configuration
 public class SlackApp {
+
+    private static final String COFFEE_MESSAGE = "coffee_message";
+    private static final String MESSAGE_SUBMIT = "coffee_message_submit";
+    private static final String PLAIN_TEXT = "plain_text";
+    private static final String INPUT_ID = "input_id";
+    private static final String INPUT_ACTION_ID = "input_action_id";
+    private static final String SELECTION_ID = "count-block";
+    private static final String SELECTION_ACTION_ID = "count-selection-action";
+
+    private final SlackService slackService;
     @Bean
     public App initSlackApp() {
         App app = new App();
         app.command("/hello", (req, ctx) -> ctx.ack("Hi there!"));
-        app.globalShortcut("coffee_message", openModal());
 
-        app.viewSubmission("coffee_message_submit", (req, ctx) -> {
+        app.globalShortcut(COFFEE_MESSAGE, openModal());
+        app.viewSubmission(MESSAGE_SUBMIT, (req, ctx) -> {
             // Sent inputs: req.getPayload().getView().getState().getValues()
-            ctx.logger.info("req.getPayload().getView().getState().getValues() = " + req.getPayload().getView().getState().getValues());
+            Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
+            ctx.logger.info("values: " + values.get(SELECTION_ID));
+            String count = values.get(SELECTION_ID).get(SELECTION_ACTION_ID).getSelectedOption().getValue();
+            ctx.logger.info("values: " + count);
 
+            ctx.logger.info("values: " + values.get(INPUT_ID));
+            String inputValue = values.get(INPUT_ID).get(INPUT_ACTION_ID).getValue();
+            ctx.logger.info("values: " + inputValue);
 
-            // TODO: send message
-            app.getClient().chatPostMessage(requestBuilder -> requestBuilder.text("hello world!")
-                    .channel("CSCB3M43G") // TODO: find channel
-            );
+            slackService.sendMessage("CSCB3M43G", count + " hello world! " + inputValue);
             return ctx.ack();
         });
+        app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
 
         app.command("/meeting", (req, ctx) -> {
             ViewsOpenResponse viewsOpenRes = ctx.client().viewsOpen(r -> r
@@ -113,33 +131,46 @@ public class SlackApp {
 
     private View buildView() {
         return view(view -> view
-                .callbackId("coffee_message_submit")
+                .callbackId(MESSAGE_SUBMIT)
                 .type("modal")
-                .notifyOnClose(true)
-                .title(viewTitle(title -> title.type("plain_text").text("Meeting Arrangement").emoji(true)))
-                .submit(viewSubmit(submit -> submit.type("plain_text").text("Submit").emoji(true)))
-                .close(viewClose(close -> close.type("plain_text").text("Cancel").emoji(true)))
-                .privateMetadata("{\"response_url\":\"https://hooks.slack.com/actions/T1ABCD2E12/330361579271/0dAEyLY19ofpLwxqozy3firz\"}")
+                // .notifyOnClose(true)
+                .title(viewTitle(titleBuilder -> titleBuilder.type(PLAIN_TEXT)
+                        .text("커피 한잔 할래요?")
+                        .emoji(true))
+                )
+                .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT)
+                        .text("제출하기")
+                        .emoji(true))
+                )
+                .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT)
+                        .text("닫기")
+                        .emoji(true))
+                )
+                // .privateMetadata("{\"response_url\":\"https://hooks.slack.com/actions/T1ABCD2E12/330361579271/0dAEyLY19ofpLwxqozy3firz\"}")
                 .blocks(asBlocks(
                         section(section -> section
-                                .blockId("category-block")
-                                .text(markdownText("Select a category of the meeting!"))
+                                .blockId(SELECTION_ID)
+                                .text(markdownText("몇 명이서 모일까요?"))
                                 .accessory(staticSelect(staticSelect -> staticSelect
-                                        .actionId("category-selection-action")
-                                        .placeholder(plainText("Select a category"))
+                                        .actionId(SELECTION_ACTION_ID)
+                                        .placeholder(plainText("N명"))
                                         .options(asOptions(
-                                                option(plainText("Customer"), "customer"),
-                                                option(plainText("Partner"), "partner"),
-                                                option(plainText("Internal"), "internal")
+                                                option(plainText("1"), "1"),
+                                                option(plainText("2"), "2"),
+                                                option(plainText("3"), "3"),
+                                                option(plainText("4"), "4")
                                         ))
                                 ))
                         ),
                         input(input -> input
-                                .blockId("agenda-block")
-                                .element(plainTextInput(pti -> pti.actionId("agenda-action").multiline(true)))
-                                .label(plainText(pt -> pt.text("Detailed Agenda").emoji(true)))
+                                .blockId(INPUT_ID)
+                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID)
+                                        .multiline(true))
+                                )
+                                .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
                         )
                 ))
         );
     }
 }
+
