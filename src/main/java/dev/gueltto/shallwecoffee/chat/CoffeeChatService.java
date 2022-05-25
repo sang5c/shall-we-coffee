@@ -97,11 +97,13 @@ public class CoffeeChatService {
     }
 
     private void sendCoffeeMessage(SlackChannel channel, int headcount, String message) {
+        // TODO: 진짜 구성원인지, 타 채널 참여자인지 확인 필요
         List<SlackMember> channelMembers = findMembers(channel);
 
         int numberOfGroups = channelMembers.size() / headcount; // TODO: 반올림?
 
         // TODO: 구성원을 랜덤하게 섞는 기능도 있어야 함
+        // TODO: headcount validation 필요. 몫이 2 이상,
         List<Group> groups = new ArrayList<>();
         for (int i = 0; i < numberOfGroups; i++) {
             int startIndex = headcount * i;
