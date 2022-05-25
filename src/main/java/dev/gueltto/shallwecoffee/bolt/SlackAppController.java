@@ -1,4 +1,4 @@
-package dev.gueltto.shallwecoffee.slack;
+package dev.gueltto.shallwecoffee.bolt;
 
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.servlet.SlackAppServlet;

@@ -1,6 +1,5 @@
 package dev.gueltto.shallwecoffee.chat;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data

@@ -1,8 +1,8 @@
-package dev.gueltto.shallwecoffee.slack;
+package dev.gueltto.shallwecoffee.bolt;
 
+import com.slack.api.app_backend.interactive_components.payload.GlobalShortcutPayload;
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.handler.builtin.GlobalShortcutHandler;
-import com.slack.api.bolt.response.Response;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.view.View;
@@ -10,7 +10,6 @@ import com.slack.api.model.view.ViewState;
 import dev.gueltto.shallwecoffee.chat.CoffeeChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -36,6 +35,7 @@ public class SlackApp {
     private static final String SELECTION_ACTION_ID = "count-selection-action";
 
     private final CoffeeChatService coffeeChatService;
+
     @Bean
     public App initSlackApp() {
         App app = new App();
@@ -53,77 +53,32 @@ public class SlackApp {
             coffeeChatService.startCoffeeChat(Integer.parseInt(count), inputValue);
             return ctx.ack();
         });
+        // warn 출력을 막기 위한 ack
         app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
 
-        app.command("/meeting", (req, ctx) -> {
-            ViewsOpenResponse viewsOpenRes = ctx.client().viewsOpen(r -> r
-                    .triggerId(ctx.getTriggerId())
-                    .view(createSubmitSample()));
-            if (viewsOpenRes.isOk()) return ctx.ack();
-            else return Response.builder().statusCode(500).body(viewsOpenRes.getError()).build();
-        });
-        app.command("/ping", (req, ctx) -> {
-            return ctx.ack(asBlocks(
-                    section(section -> section.text(markdownText(":wave: pong"))),
-                    actions(actions -> actions
-                            .elements(asElements(
-                                    button(b -> b.actionId("ping-again").text(plainText(pt -> pt.text("Ping"))).value("ping"))
-                            ))
-                    )
-            ));
-        });
         return app;
     }
 
-    @NotNull
+    /**
+     * <a href="https://api.slack.com/methods/views.open/code">API DOCS</a>
+     */
     private GlobalShortcutHandler openModal() {
         return (req, ctx) -> {
             var logger = ctx.logger;
             try {
-                var payload = req.getPayload();
+                GlobalShortcutPayload payload = req.getPayload();
                 // Call the conversations.create method using the built-in WebClient
-                var result = ctx.client()
+                ViewsOpenResponse response = ctx.client()
                         .viewsOpen(r -> r.triggerId(payload.getTriggerId())
                                 .view(buildView())
                         );
-                // Print result
-                logger.info("result: {}", result);
+                // Print response
+                logger.info("response: {}", response);
             } catch (IOException | SlackApiException e) {
                 logger.error("error: {}", e.getMessage(), e);
             }
             return ctx.ack();
         };
-    }
-
-    private View createSubmitSample() {
-        return view(v -> v
-                .type("modal")
-                .submit(viewSubmit(vs -> vs.type("plain_text").text("Start")))
-                .blocks(asBlocks(
-                        section(s -> s
-                                .text(plainText("The channel we'll post the result"))
-                                .accessory(conversationsSelect(conv -> conv
-                                        .actionId("notification_conv_id")
-                                        .responseUrlEnabled(true)
-                                        .defaultToCurrentConversation(true)
-                                ))
-                        )
-                )));
-    }
-
-    private View createModalSample() {
-        return view(v -> v
-                .type("modal")
-                .title(viewTitle(vt -> vt.type("plain_text").text("My App")))
-                .close(viewClose(vc -> vc.type("plain_text").text("Close")))
-                .blocks(asBlocks(
-                        section(s -> s.text(markdownText(mt ->
-                                mt.text("About the simplest modal you could conceive of :smile:\\n\\nMaybe <https://api.slack.com/reference/block-kit/interactive-components|*make the modal interactive*> or <https://api.slack.com/surfaces/modals/using#modifying|*learn more advanced modal use cases*>.")))),
-                        context(c -> c.elements(asContextElements(
-                                markdownText("Psssst this modal was designed using <https://api.slack.com/tools/block-kit-builder|*Block Kit Builder*>")
-                        )))
-                ))
-        );
     }
 
     private View buildView() {
@@ -152,11 +107,11 @@ public class SlackApp {
                                         .actionId(SELECTION_ACTION_ID)
                                         .placeholder(plainText("N명"))
                                         .options(asOptions(
-                                                option(plainText("1"), "1"),
-                                                option(plainText("2"), "2"),
-                                                option(plainText("3"), "3"),
+                                                // option(plainText("1"), "1"),
+                                                // option(plainText("2"), "2"),
+                                                option(plainText("3"), "3"), // TODO: 2명 이하는 불가능해야 한다. 최대값은?
                                                 option(plainText("4"), "4")
-                                        ))
+                                        )) // TODO: 옵션으로 제공할지, 숫자 입력 받을지
                                 ))
                         ),
                         input(input -> input
