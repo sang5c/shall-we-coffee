@@ -7,7 +7,7 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewState;
-import dev.gueltto.shallwecoffee.chat.SlackService;
+import dev.gueltto.shallwecoffee.chat.CoffeeChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ public class SlackApp {
     private static final String SELECTION_ID = "count-block";
     private static final String SELECTION_ACTION_ID = "count-selection-action";
 
-    private final SlackService slackService;
+    private final CoffeeChatService coffeeChatService;
     @Bean
     public App initSlackApp() {
         App app = new App();
@@ -43,17 +43,14 @@ public class SlackApp {
 
         app.globalShortcut(COFFEE_MESSAGE, openModal());
         app.viewSubmission(MESSAGE_SUBMIT, (req, ctx) -> {
-            // Sent inputs: req.getPayload().getView().getState().getValues()
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
-            ctx.logger.info("values: " + values.get(SELECTION_ID));
+            log.debug("values: " + values);
+
             String count = values.get(SELECTION_ID).get(SELECTION_ACTION_ID).getSelectedOption().getValue();
-            ctx.logger.info("values: " + count);
-
-            ctx.logger.info("values: " + values.get(INPUT_ID));
             String inputValue = values.get(INPUT_ID).get(INPUT_ACTION_ID).getValue();
-            ctx.logger.info("values: " + inputValue);
+            log.info("count: {}, notice: {}", count, inputValue);
 
-            slackService.sendMessage("CSCB3M43G", count + " hello world! " + inputValue);
+            coffeeChatService.startCoffeeChat(Integer.parseInt(count), inputValue);
             return ctx.ack();
         });
         app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
