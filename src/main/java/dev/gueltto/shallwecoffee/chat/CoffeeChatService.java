@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,10 +17,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Service
 public class CoffeeChatService {
+    private static final String GROUP_MESSAGE_FORMAT = "\n%d조: %s";
 
     // TODO: SlackService 분리
     private static final MethodsClient slackClient = Slack.getInstance()
             .methods(System.getenv("SLACK_BOT_TOKEN"));
+    private static final int FIRST_GROUP_INDEX = 1;
 
     private List<SlackChannel> findChannels(String prefix) {
         try {
@@ -35,29 +36,18 @@ public class CoffeeChatService {
         }
     }
 
-    public List<SlackMember> findMembers(SlackChannel channel) {
+    public List<String> findMemberIds(SlackChannel channel) {
         // try {
         //     ConversationsMembersResponse response = slackClient.conversationsMembers(builder ->
         //             builder.channel(channel.getId())
         //     );
-        //     return response.getMembers().stream()
-        //             .map(this::findUserInfo)  // 현재 기준으로 userId만 필요하다. 변환하지 않고 사용해도 됨
-        //             .toList();
+        //     return response.getMembers();
         // } catch (Exception e) {
         //     throw new RuntimeException(e);
         // }
         return List.of(
-                SlackMember.of("USA5B2R61", "disname1", "realname1"),
-                SlackMember.of("id1", "disname1", "realname1"),
-                SlackMember.of("id2", "disname2", "realname2"),
-                SlackMember.of("id3", "disname3", "realname3"),
-                SlackMember.of("id4", "disname4", "realname4"),
-                SlackMember.of("id5", "disname5", "realname5"),
-                SlackMember.of("id6", "disname6", "realname6"),
-                SlackMember.of("id7", "disname7", "realname7"),
-                SlackMember.of("id8", "disname8", "realname8"),
-                SlackMember.of("id9", "disname9", "realname9"),
-                SlackMember.of("id10", "disname10", "realname10")
+                "id1", "id2", "id3", "id4", "id5",
+                "id6", "id7", "id8", "id9", "USA5B2R61", "id10"
         );
     }
 
@@ -90,7 +80,9 @@ public class CoffeeChatService {
 
     // TODO: async
     public void startCoffeeChat(int count, String message) {
-        List<SlackChannel> channels = findChannels("");
+        // TODO: 지정한 채널에 뿌릴지, 전체 채널에 뿌릴지 받으면 좋을듯!
+        //  아니면 봇이 들어있는 채널만 출력한다던지?
+        List<SlackChannel> channels = findChannels("3_");
         log.info("channels = " + channels);
 
         channels.forEach(channel -> sendCoffeeMessage(channel, count, message));
@@ -98,39 +90,25 @@ public class CoffeeChatService {
 
     private void sendCoffeeMessage(SlackChannel channel, int headcount, String message) {
         // TODO: 진짜 구성원인지, 타 채널 참여자인지 확인 필요
-        List<SlackMember> channelMembers = findMembers(channel);
+        List<String> channelMemberIds = findMemberIds(channel);
 
-        int numberOfGroups = channelMembers.size() / headcount; // TODO: 반올림?
+        Groups groups = Groups.of(headcount, channelMemberIds);
 
-        // TODO: 구성원을 랜덤하게 섞는 기능도 있어야 함
-        // TODO: headcount validation 필요. 몫이 2 이상,
-        List<Group> groups = new ArrayList<>();
-        for (int i = 0; i < numberOfGroups; i++) {
-            int startIndex = headcount * i;
-            groups.add(
-                    Group.of(channelMembers.subList(startIndex, startIndex + headcount)) // TODO: 나눠떨어지지 않는 인원을 어떻게 포함시킬 것인지
-            );
-        }
         log.info("groups = " + groups);
         String chatMessage = generateChatMessage(message, groups);
         sendMessage(channel.getId(), chatMessage);
     }
 
-    private String generateChatMessage(String message, List<Group> groups) {
-        StringBuilder coffeeMessageBuilder = new StringBuilder(message);
-        coffeeMessageBuilder.append("\n");
+    private String generateChatMessage(String message, Groups groups) {
+        StringBuilder coffeeMessage = new StringBuilder(message);
+        coffeeMessage.append("\n");
 
-        List<String> mentions = groups.stream()
-                .map(Group::toMentionStr)
-                .toList();
+        List<String> mentions = groups.toMentions();
 
-        AtomicInteger count = new AtomicInteger(1);
-        mentions.forEach(
-                mentionStr -> coffeeMessageBuilder.append("\n")
-                        .append(count.getAndIncrement())
-                        .append("조: ")
-                        .append(mentionStr)
+        AtomicInteger count = new AtomicInteger(FIRST_GROUP_INDEX);
+        mentions.forEach(mentionStr -> coffeeMessage.append(
+                String.format(GROUP_MESSAGE_FORMAT, count.getAndIncrement(), mentionStr))
         );
-        return coffeeMessageBuilder.toString();
+        return coffeeMessage.toString();
     }
 }
