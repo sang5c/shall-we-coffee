@@ -6,8 +6,10 @@ import com.slack.api.methods.request.conversations.ConversationsListRequest;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.conversations.ConversationsListResponse;
 import com.slack.api.model.User;
+import dev.gueltto.shallwecoffee.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +21,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CoffeeChatService {
     private static final String GROUP_MESSAGE_FORMAT = "\n%d조: %s";
 
+    private static final String SLACK_BOT_TOKEN = "SLACK_BOT_TOKEN";
     // TODO: SlackService 분리
     private static final MethodsClient slackClient = Slack.getInstance()
-            .methods(System.getenv("SLACK_BOT_TOKEN"));
+            .methods(System.getenv(SLACK_BOT_TOKEN));
     private static final int FIRST_GROUP_INDEX = 1;
+    private final MemberService memberService;
 
     private List<SlackChannel> findChannels(String prefix) {
         try {
@@ -78,7 +82,7 @@ public class CoffeeChatService {
         }
     }
 
-    // TODO: async
+    @Async
     public void startCoffeeChat(int count, String message) {
         // TODO: 지정한 채널에 뿌릴지, 전체 채널에 뿌릴지 받으면 좋을듯!
         //  아니면 봇이 들어있는 채널만 출력한다던지?
@@ -89,14 +93,22 @@ public class CoffeeChatService {
     }
 
     private void sendCoffeeMessage(SlackChannel channel, int headcount, String message) {
-        // TODO: 진짜 구성원인지, 타 채널 참여자인지 확인 필요
         List<String> channelMemberIds = findMemberIds(channel);
+        List<String> realMemberIds = excludeVisitors(channel, channelMemberIds);
+        log.debug("realMemberIds = " + realMemberIds);
 
-        Groups groups = Groups.of(headcount, channelMemberIds);
-
+        Groups groups = Groups.of(realMemberIds, headcount);
         log.info("groups = " + groups);
+
         String chatMessage = generateChatMessage(message, groups);
         sendMessage(channel.getId(), chatMessage);
+    }
+
+    private List<String> excludeVisitors(SlackChannel slackChannel, List<String> memberIds) {
+        List<String> realMemberIds = memberService.findRealMembers(slackChannel.getId());
+        return memberIds.stream()
+                .filter(realMemberIds::contains)
+                .toList();
     }
 
     private String generateChatMessage(String message, Groups groups) {
