@@ -9,9 +9,8 @@ import java.util.List;
 @Service
 public class ProdMemberService implements MemberService {
 
-    // TODO: findBy Bigquery
     @Override
     public List<String> findRealMembers(String channelId) {
-        return null;
+        return Channels.from(channelId).getMemberIds();
     }
 }
