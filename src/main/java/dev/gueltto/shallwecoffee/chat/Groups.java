@@ -19,7 +19,7 @@ public class Groups {
     /**
      * @param memberIds 전체 멤버
      * @param headcount 그룹 구성원 수
-     *                  <p>
+     *                  <br>
      *                  그룹 지정 인원수로 나누어 떨어지지 않는 인원은 구성된 조에 한명씩 추가된다.
      */
     public static Groups of(List<String> memberIds, int headcount) {
