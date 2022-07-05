@@ -101,7 +101,7 @@ public class SlackApp {
                                         .accessory(
                                                 datePicker(datePickerElementBuilder -> datePickerElementBuilder
                                                         .actionId("DATE_ACTION_ID")
-                                                        .initialDate(LocalDateTime.now().toString())
+                                                        .initialDate(LocalDateTime.now().toLocalDate().toString())
                                                         .placeholder(plainText(pt -> pt.text("text").emoji(true)))
                                                 )
                                         )
@@ -112,7 +112,7 @@ public class SlackApp {
                                         .accessory(
                                                 datePicker(datePickerElementBuilder -> datePickerElementBuilder
                                                         .actionId("DEADLINE_DATE_ACTION_ID")
-                                                        .initialDate(LocalDateTime.now().toString())
+                                                        .initialDate(LocalDateTime.now().toLocalDate().toString())
                                                         .placeholder(plainText(pt -> pt.text("text").emoji(true)))
                                                 )
                                         )
