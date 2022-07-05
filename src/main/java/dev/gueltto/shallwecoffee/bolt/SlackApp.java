@@ -39,6 +39,10 @@ public class SlackApp {
     // 특정 채널 커피챗 이벤트 ID
     private static final String CHAN_CHAT_MESSAGE = "channel_coffee_chat";
     private static final String CHAN_CHAT_MESSAGE_SUBMIT = "channel_coffee_chat_submit";
+    private static final String PLACE_INPUT = "place_input";
+    private static final String PLACE_INPUT_ACTION = "place_input_action";
+    private static final String ANNOUNCEMENT_INPUT = "announcement_input";
+    private static final String ANNOUNCEMENT_INPUT_ACTION = "announcement_input_action";
 
     private final CoffeeChatService coffeeChatService;
 
@@ -87,6 +91,7 @@ public class SlackApp {
         };
     }
 
+    // TODO: 아이디 정리
     private View buildScheduleView() {
         return view(view -> view.callbackId(CHAN_CHAT_MESSAGE_SUBMIT)
                 .type("modal")
@@ -134,13 +139,13 @@ public class SlackApp {
 
                                 //     - [ ] 예상 장소
                                 //  마감시간
-                                input(input -> input.blockId(INPUT_ID)
+                                input(input -> input.blockId(PLACE_INPUT)
                                         .label(plainText(pt -> pt.text("예상 장소").emoji(true)))
-                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID)))
+                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(PLACE_INPUT_ACTION)))
                                 ),
-                                input(input -> input.blockId(INPUT_ID)
+                                input(input -> input.blockId(ANNOUNCEMENT_INPUT)
                                         .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
-                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID).multiline(true)))
+                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(ANNOUNCEMENT_INPUT_ACTION).multiline(true)))
                                 )
                         )
                 )
