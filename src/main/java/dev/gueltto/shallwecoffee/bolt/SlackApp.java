@@ -131,22 +131,16 @@ public class SlackApp {
                                 //                 )) // TODO: 옵션으로 제공할지, 숫자 입력 받을지
                                 //         ))
                                 // ),
-                                //    - [ ] 날짜 / 시간
-                                //{
-                                // 					"type": "datepicker",
-                                // 					"initial_date": "1990-04-28",
-                                // 					"placeholder": {
-                                // 						"type": "plain_text",
-                                // 						"text": "Select a date",
-                                // 						"emoji": true
-                                // 					},
-                                // 					"action_id": "actionId-0"
-                                // 				},
+
                                 //     - [ ] 예상 장소
                                 //  마감시간
                                 input(input -> input.blockId(INPUT_ID)
-                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID).multiline(true)))
+                                        .label(plainText(pt -> pt.text("예상 장소").emoji(true)))
+                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID)))
+                                ),
+                                input(input -> input.blockId(INPUT_ID)
                                         .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
+                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID).multiline(true)))
                                 )
                         )
                 )
