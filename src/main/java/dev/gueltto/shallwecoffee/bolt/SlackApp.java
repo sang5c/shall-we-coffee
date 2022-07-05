@@ -99,47 +99,46 @@ public class SlackApp {
                 .title(viewTitle(titleBuilder -> titleBuilder.type(PLAIN_TEXT).text("커피 한잔 할래요? (해당 채널)").emoji(true)))
                 .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT).text("제출하기").emoji(true)))
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
-                .blocks(
-                        asBlocks(
-                                section(sectionBuilder -> sectionBuilder.text(markdownText("**모임 날짜는 언제인가요?**"))),
-                                actions(actionsBuilder -> actionsBuilder.blockId("testid")
-                                        .elements(
-                                                asElements(
-                                                        datePicker(datePickerBuilder -> datePickerBuilder
-                                                                .actionId("DATE_ACTION_ID")
-                                                                .initialDate(LocalDateTime.now().toLocalDate().toString())
-                                                                .placeholder(plainText(pt -> pt.text("text").emoji(true)))
-                                                        ),
-                                                        timePicker(timePickerBuilder -> timePickerBuilder
-                                                                .actionId("TIME_ACTION_ID")
-                                                                .initialTime(LocalTime.of(18, 0).toString())
-                                                                .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
-                                                        )
-                                                )
-                                        )
-
-                                ),
-                                section(section -> section
-                                        .blockId("DEADLINE_DATE_ID")
-                                        .text(markdownText("참가자를 언제까지 받을까요?"))
-                                        .accessory(
+                .blocks(asBlocks(
+                        section(sectionBuilder -> sectionBuilder.text(markdownText("**모임 날짜는 언제인가요?**"))),
+                        actions(actionsBuilder -> actionsBuilder.blockId("testid")
+                                .elements(
+                                        asElements(
                                                 datePicker(datePickerBuilder -> datePickerBuilder
-                                                        .actionId("DEADLINE_DATE_ACTION_ID")
+                                                        .actionId("DATE_ACTION_ID")
                                                         .initialDate(LocalDateTime.now().toLocalDate().toString())
                                                         .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                                ),
+                                                timePicker(timePickerBuilder -> timePickerBuilder
+                                                        .actionId("TIME_ACTION_ID")
+                                                        .initialTime(LocalTime.of(18, 0).toString())
+                                                        .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
                                                 )
                                         )
-                                ),
-                                input(input -> input.blockId(PLACE_INPUT)
-                                        .label(plainText(pt -> pt.text("예상 장소").emoji(true)))
-                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(PLACE_INPUT_ACTION)))
-                                ),
-                                input(input -> input.blockId(ANNOUNCEMENT_INPUT)
-                                        .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
-                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(ANNOUNCEMENT_INPUT_ACTION).multiline(true)))
                                 )
+
+                        ),
+                        // TODO: 두줄로 출력
+                        section(section -> section
+                                .blockId("DEADLINE_DATE_ID")
+                                .text(markdownText("참가자를 언제까지 받을까요?"))
+                                .accessory(
+                                        datePicker(datePickerBuilder -> datePickerBuilder
+                                                .actionId("DEADLINE_DATE_ACTION_ID")
+                                                .initialDate(LocalDateTime.now().toLocalDate().toString())
+                                                .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                        )
+                                )
+                        ),
+                        input(input -> input.blockId(PLACE_INPUT)
+                                .label(plainText(pt -> pt.text("예상 장소").emoji(true)))
+                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(PLACE_INPUT_ACTION)))
+                        ),
+                        input(input -> input.blockId(ANNOUNCEMENT_INPUT)
+                                .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
+                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(ANNOUNCEMENT_INPUT_ACTION).multiline(true)))
                         )
-                )
+                ))
         );
     }
 
