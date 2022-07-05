@@ -90,24 +90,28 @@ public class SlackApp {
     private View buildScheduleView() {
         return view(view -> view.callbackId(CHAN_CHAT_MESSAGE_SUBMIT)
                 .type("modal")
-                .title(viewTitle(titleBuilder -> titleBuilder.type(PLAIN_TEXT)
-                        .text("커피 한잔 할래요? (해당 채널)")
-                        .emoji(true))
-                )
-                .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT)
-                        .text("제출하기")
-                        .emoji(true))
-                )
-                .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT)
-                        .text("닫기")
-                        .emoji(true))
-                )
-
+                .title(viewTitle(titleBuilder -> titleBuilder.type(PLAIN_TEXT).text("커피 한잔 할래요? (해당 채널)").emoji(true)))
+                .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT).text("제출하기").emoji(true)))
+                .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(
                         asBlocks(
-                                section(section -> section.accessory(
+                                section(section -> section
+                                        .blockId("CHAT_DATE_ID")
+                                        .text(markdownText("모일 날짜는 언제인가요?"))
+                                        .accessory(
                                                 datePicker(datePickerElementBuilder -> datePickerElementBuilder
-                                                        .actionId("DATE_ID")
+                                                        .actionId("DATE_ACTION_ID")
+                                                        .initialDate(LocalDateTime.now().toString())
+                                                        .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                                )
+                                        )
+                                ),
+                                section(section -> section
+                                        .blockId("DEADLINE_DATE_ID")
+                                        .text(markdownText("참가자를 언제까지 받을까요?"))
+                                        .accessory(
+                                                datePicker(datePickerElementBuilder -> datePickerElementBuilder
+                                                        .actionId("DEADLINE_DATE_ACTION_ID")
                                                         .initialDate(LocalDateTime.now().toString())
                                                         .placeholder(plainText(pt -> pt.text("text").emoji(true)))
                                                 )
