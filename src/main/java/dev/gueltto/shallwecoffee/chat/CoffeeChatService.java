@@ -38,7 +38,9 @@ public class CoffeeChatService {
         log.info("groups = " + groups);
 
         String chatMessage = generateChatMessage(message, groups);
-        slackApi.sendMessage(channel.getId(), chatMessage);
+        // 임시로 운영진 채널에만 전송하도록 막는다.
+        // slackApi.sendMessage(channel.getId(), chatMessage);
+        slackApi.sendMessage("C03CXBNFNEM", chatMessage);
     }
 
     private List<String> excludeVisitors(SlackChannel slackChannel, List<String> memberIds) {

@@ -39,7 +39,7 @@ public class SlackApp {
     @Bean
     public App initSlackApp() {
         App app = new App();
-        app.command("/hello", (req, ctx) -> ctx.ack("Hi there!"));
+        // app.command("/hello", (req, ctx) -> ctx.ack("Hi there!"));
 
         app.globalShortcut(COFFEE_MESSAGE, openModal());
         app.viewSubmission(MESSAGE_SUBMIT, (req, ctx) -> {
