@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import static com.slack.api.model.block.Blocks.*;
@@ -26,6 +27,7 @@ import static com.slack.api.model.view.Views.*;
 @Configuration
 public class SlackApp {
 
+    // 전체 커피챗 이벤트 ID
     private static final String COFFEE_MESSAGE = "coffee_message";
     private static final String MESSAGE_SUBMIT = "coffee_message_submit";
     private static final String PLAIN_TEXT = "plain_text";
@@ -34,12 +36,19 @@ public class SlackApp {
     private static final String SELECTION_ID = "count-block";
     private static final String SELECTION_ACTION_ID = "count-selection-action";
 
+    // 특정 채널 커피챗 이벤트 ID
+    private static final String CHAN_CHAT_MESSAGE = "channel_coffee_chat";
+    private static final String CHAN_CHAT_MESSAGE_SUBMIT = "channel_coffee_chat_submit";
+
     private final CoffeeChatService coffeeChatService;
 
     @Bean
     public App initSlackApp() {
         App app = new App();
         // app.command("/hello", (req, ctx) -> ctx.ack("Hi there!"));
+
+        app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
+
 
         app.globalShortcut(COFFEE_MESSAGE, openModal());
         app.viewSubmission(MESSAGE_SUBMIT, (req, ctx) -> {
@@ -57,6 +66,87 @@ public class SlackApp {
         app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
 
         return app;
+    }
+
+    private GlobalShortcutHandler openScheduleModal() {
+        return (req, ctx) -> {
+            var logger = ctx.logger;
+            try {
+                GlobalShortcutPayload payload = req.getPayload();
+                // Call the conversations.create method using the built-in WebClient
+                ViewsOpenResponse response = ctx.client()
+                        .viewsOpen(r -> r.triggerId(payload.getTriggerId())
+                                .view(buildScheduleView())
+                        );
+                // Print response
+                logger.info("response: {}", response);
+            } catch (IOException | SlackApiException e) {
+                logger.error("error: {}", e.getMessage(), e);
+            }
+            return ctx.ack();
+        };
+    }
+
+    private View buildScheduleView() {
+        return view(view -> view.callbackId(CHAN_CHAT_MESSAGE_SUBMIT)
+                .type("modal")
+                .title(viewTitle(titleBuilder -> titleBuilder.type(PLAIN_TEXT)
+                        .text("커피 한잔 할래요? (해당 채널)")
+                        .emoji(true))
+                )
+                .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT)
+                        .text("제출하기")
+                        .emoji(true))
+                )
+                .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT)
+                        .text("닫기")
+                        .emoji(true))
+                )
+
+                .blocks(
+                        asBlocks(
+                                section(section -> section.accessory(
+                                                datePicker(datePickerElementBuilder -> datePickerElementBuilder
+                                                        .actionId("DATE_ID")
+                                                        .initialDate(LocalDateTime.now().toString())
+                                                        .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                                )
+                                        )
+                                ),
+                                // section(section -> section
+                                //         .blockId(SELECTION_ID)
+                                //         .text(markdownText("몇 명이서 모일까요?"))
+                                //         .accessory(staticSelect(staticSelect -> staticSelect
+                                //                 .actionId(SELECTION_ACTION_ID)
+                                //                 .placeholder(plainText("N명"))
+                                //                 .options(asOptions(
+                                //                         // option(plainText("1"), "1"),
+                                //                         // option(plainText("2"), "2"),
+                                //                         option(plainText("3"), "3"), // TODO: 2명 이하는 불가능해야 한다. 최대값은?
+                                //                         option(plainText("4"), "4")
+                                //                 )) // TODO: 옵션으로 제공할지, 숫자 입력 받을지
+                                //         ))
+                                // ),
+                                //    - [ ] 날짜 / 시간
+                                //{
+                                // 					"type": "datepicker",
+                                // 					"initial_date": "1990-04-28",
+                                // 					"placeholder": {
+                                // 						"type": "plain_text",
+                                // 						"text": "Select a date",
+                                // 						"emoji": true
+                                // 					},
+                                // 					"action_id": "actionId-0"
+                                // 				},
+                                //     - [ ] 예상 장소
+                                //  마감시간
+                                input(input -> input.blockId(INPUT_ID)
+                                        .element(plainTextInput(inputBuilder -> inputBuilder.actionId(INPUT_ACTION_ID).multiline(true)))
+                                        .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
+                                )
+                        )
+                )
+        );
     }
 
     /**
