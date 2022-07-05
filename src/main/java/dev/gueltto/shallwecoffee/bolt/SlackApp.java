@@ -101,24 +101,7 @@ public class SlackApp {
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(
                         asBlocks(
-                                // section(section -> section
-                                //                 .blockId("CHAT_DATE_ID")
-                                //                 .text(markdownText("모일 날짜는 언제인가요?"))
-                                //                 .accessory(
-                                //                         datePicker(datePickerBuilder -> datePickerBuilder
-                                //                                 .actionId("DATE_ACTION_ID")
-                                //                                 .initialDate(LocalDateTime.now().toLocalDate().toString())
-                                //                                 .placeholder(plainText(pt -> pt.text("text").emoji(true)))
-                                //                         )
-                                //                 )
-                                // .accessory(
-                                //         timePicker(timePickerBuilder -> timePickerBuilder
-                                //                 .actionId("TIME_ACTION_ID")
-                                //                 .initialTime(LocalTime.of(18, 0).toString())
-                                //                 .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
-                                //         )
-                                // )
-                                // ),
+                                section(sectionBuilder -> sectionBuilder.text(markdownText("**모임 날짜는 언제인가요?**"))),
                                 actions(actionsBuilder -> actionsBuilder.blockId("testid")
                                         .elements(
                                                 asElements(
@@ -147,23 +130,6 @@ public class SlackApp {
                                                 )
                                         )
                                 ),
-                                // section(section -> section
-                                //         .blockId(SELECTION_ID)
-                                //         .text(markdownText("몇 명이서 모일까요?"))
-                                //         .accessory(staticSelect(staticSelect -> staticSelect
-                                //                 .actionId(SELECTION_ACTION_ID)
-                                //                 .placeholder(plainText("N명"))
-                                //                 .options(asOptions(
-                                //                         // option(plainText("1"), "1"),
-                                //                         // option(plainText("2"), "2"),
-                                //                         option(plainText("3"), "3"), // TODO: 2명 이하는 불가능해야 한다. 최대값은?
-                                //                         option(plainText("4"), "4")
-                                //                 )) // TODO: 옵션으로 제공할지, 숫자 입력 받을지
-                                //         ))
-                                // ),
-
-                                //     - [ ] 예상 장소
-                                //  마감시간
                                 input(input -> input.blockId(PLACE_INPUT)
                                         .label(plainText(pt -> pt.text("예상 장소").emoji(true)))
                                         .element(plainTextInput(inputBuilder -> inputBuilder.actionId(PLACE_INPUT_ACTION)))
