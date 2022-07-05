@@ -101,23 +101,40 @@ public class SlackApp {
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(
                         asBlocks(
-                                section(section -> section
-                                        .blockId("CHAT_DATE_ID")
-                                        .text(markdownText("모일 날짜는 언제인가요?"))
-                                        .accessory(
-                                                datePicker(datePickerBuilder -> datePickerBuilder
-                                                        .actionId("DATE_ACTION_ID")
-                                                        .initialDate(LocalDateTime.now().toLocalDate().toString())
-                                                        .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                // section(section -> section
+                                //                 .blockId("CHAT_DATE_ID")
+                                //                 .text(markdownText("모일 날짜는 언제인가요?"))
+                                //                 .accessory(
+                                //                         datePicker(datePickerBuilder -> datePickerBuilder
+                                //                                 .actionId("DATE_ACTION_ID")
+                                //                                 .initialDate(LocalDateTime.now().toLocalDate().toString())
+                                //                                 .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                //                         )
+                                //                 )
+                                // .accessory(
+                                //         timePicker(timePickerBuilder -> timePickerBuilder
+                                //                 .actionId("TIME_ACTION_ID")
+                                //                 .initialTime(LocalTime.of(18, 0).toString())
+                                //                 .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
+                                //         )
+                                // )
+                                // ),
+                                actions(actionsBuilder -> actionsBuilder.blockId("testid")
+                                        .elements(
+                                                asElements(
+                                                        datePicker(datePickerBuilder -> datePickerBuilder
+                                                                .actionId("DATE_ACTION_ID")
+                                                                .initialDate(LocalDateTime.now().toLocalDate().toString())
+                                                                .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                                        ),
+                                                        timePicker(timePickerBuilder -> timePickerBuilder
+                                                                .actionId("TIME_ACTION_ID")
+                                                                .initialTime(LocalTime.of(18, 0).toString())
+                                                                .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
+                                                        )
                                                 )
                                         )
-                                        .accessory(
-                                                timePicker(timePickerBuilder -> timePickerBuilder
-                                                        .actionId("TIME_ACTION_ID")
-                                                        .initialTime(LocalTime.of(18, 0).toString())
-                                                        .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
-                                                )
-                                        )
+
                                 ),
                                 section(section -> section
                                         .blockId("DEADLINE_DATE_ID")
