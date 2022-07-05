@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Map;
 
 import static com.slack.api.model.block.Blocks.*;
@@ -104,10 +105,17 @@ public class SlackApp {
                                         .blockId("CHAT_DATE_ID")
                                         .text(markdownText("모일 날짜는 언제인가요?"))
                                         .accessory(
-                                                datePicker(datePickerElementBuilder -> datePickerElementBuilder
+                                                datePicker(datePickerBuilder -> datePickerBuilder
                                                         .actionId("DATE_ACTION_ID")
                                                         .initialDate(LocalDateTime.now().toLocalDate().toString())
                                                         .placeholder(plainText(pt -> pt.text("text").emoji(true)))
+                                                )
+                                        )
+                                        .accessory(
+                                                timePicker(timePickerBuilder -> timePickerBuilder
+                                                        .actionId("TIME_ACTION_ID")
+                                                        .initialTime(LocalTime.of(18, 0).toString())
+                                                        .placeholder(plainText(pt -> pt.text("시간").emoji(true)))
                                                 )
                                         )
                                 ),
@@ -115,7 +123,7 @@ public class SlackApp {
                                         .blockId("DEADLINE_DATE_ID")
                                         .text(markdownText("참가자를 언제까지 받을까요?"))
                                         .accessory(
-                                                datePicker(datePickerElementBuilder -> datePickerElementBuilder
+                                                datePicker(datePickerBuilder -> datePickerBuilder
                                                         .actionId("DEADLINE_DATE_ACTION_ID")
                                                         .initialDate(LocalDateTime.now().toLocalDate().toString())
                                                         .placeholder(plainText(pt -> pt.text("text").emoji(true)))
