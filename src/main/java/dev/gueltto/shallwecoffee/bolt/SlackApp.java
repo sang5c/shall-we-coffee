@@ -102,7 +102,7 @@ public class SlackApp {
                 .blocks(asBlocks(
                         // 모임 날짜
                         input(input -> input.blockId("CHAT_DATE_ID")
-                                .label(plainText(pt -> pt.text("*모임 날짜는 언제인가요?*").emoji(true)))
+                                .label(plainText(pt -> pt.text("모임 날짜는 언제인가요?").emoji(true)))
                                 .element(datePicker(datePickerBuilder -> datePickerBuilder
                                                 .actionId("CHAT_DATE_ACTION_ID")
                                                 .initialDate(LocalDateTime.now().toLocalDate().toString())
@@ -111,7 +111,7 @@ public class SlackApp {
                         ),
                         // 마감일
                         input(input -> input.blockId("DEADLINE_DATE_ID")
-                                .label(plainText(pt -> pt.text("*참가자를 언제까지 받을까요?*").emoji(true)))
+                                .label(plainText(pt -> pt.text("참가자를 언제까지 받을까요?").emoji(true)))
                                 .element(datePicker(datePickerBuilder -> datePickerBuilder
                                                 .actionId("DEADLINE_DATE_ACTION_ID")
                                                 .initialDate(LocalDateTime.now().plusDays(1).toLocalDate().toString())
