@@ -5,8 +5,10 @@ import dev.gueltto.shallwecoffee.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,10 +28,16 @@ public class CoffeeChatService {
         List<SlackChannel> channels = slackApi.findChannels("3_");
         log.info("channels = " + channels);
 
-        channels.forEach(channel -> sendCoffeeMessage(channel, count, message));
+        channels.forEach(channel -> sendCoffeeMessageByChannel(channel, count, message));
     }
 
-    private void sendCoffeeMessage(SlackChannel channel, int headcount, String message) {
+    @Scheduled(cron = "0 35 09 * * ?", zone = "Asia/Seoul")
+    public void schedule() {
+        log.info("now: {}", LocalDateTime.now());
+        log.info("헤로쿠 스케줄러 잘 나오나 보자고~");
+    }
+
+    private void sendCoffeeMessageByChannel(SlackChannel channel, int headcount, String message) {
         List<String> channelMemberIds = slackApi.findMemberIds(channel);
         List<String> realMemberIds = excludeVisitors(channel, channelMemberIds);
         log.debug("realMemberIds = " + realMemberIds);
