@@ -101,30 +101,22 @@ public class SlackApp {
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(asBlocks(
                         // 모임 날짜
-                        section(sectionBuilder -> sectionBuilder.text(markdownText("*모임 날짜는 언제인가요?*"))),
-                        actions(actionsBuilder -> actionsBuilder.blockId("testid")
-                                .elements(
-                                        asElements(
-                                                datePicker(datePickerBuilder -> datePickerBuilder
-                                                        .actionId("DATE_ACTION_ID")
-                                                        .initialDate(LocalDateTime.now().toLocalDate().toString())
-                                                )
+                        input(input -> input.blockId("CHAT_DATE_ID")
+                                .label(plainText(pt -> pt.text("*모임 날짜는 언제인가요?*").emoji(true)))
+                                .element(datePicker(datePickerBuilder -> datePickerBuilder
+                                                .actionId("CHAT_DATE_ACTION_ID")
+                                                .initialDate(LocalDateTime.now().toLocalDate().toString())
                                         )
                                 )
-
                         ),
                         // 마감일
-                        section(sectionBuilder -> sectionBuilder.text(markdownText("*참가자를 언제까지 받을까요?*"))),
-                        actions(actionsBuilder -> actionsBuilder.blockId("DEADLINE_DATE_ID")
-                                .elements(
-                                        asElements(
-                                                datePicker(datePickerBuilder -> datePickerBuilder
-                                                        .actionId("DEADLINE_DATE_ACTION_ID")
-                                                        .initialDate(LocalDateTime.now().plusDays(1).toLocalDate().toString())
-                                                )
+                        input(input -> input.blockId("DEADLINE_DATE_ID")
+                                .label(plainText(pt -> pt.text("*참가자를 언제까지 받을까요?*").emoji(true)))
+                                .element(datePicker(datePickerBuilder -> datePickerBuilder
+                                                .actionId("DEADLINE_DATE_ACTION_ID")
+                                                .initialDate(LocalDateTime.now().plusDays(1).toLocalDate().toString())
                                         )
                                 )
-
                         ),
                         // 장소
                         input(input -> input.blockId(PLACE_INPUT)
