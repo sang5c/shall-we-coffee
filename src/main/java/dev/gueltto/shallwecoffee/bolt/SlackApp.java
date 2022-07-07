@@ -50,11 +50,16 @@ public class SlackApp {
     @Bean
     public App initSlackApp() {
         App app = new App();
-        // app.command("/hello", (req, ctx) -> ctx.ack("Hi there!"));
-
+        // 채널별 커피챗
         app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
+        app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, (req, ctx) -> {
+            Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
+            log.debug("values: " + values);
 
+            return ctx.ack();
+        });
 
+        // 전체 "3_" 채널별 커피챗
         app.globalShortcut(COFFEE_MESSAGE, openModal());
         app.viewSubmission(MESSAGE_SUBMIT, (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
