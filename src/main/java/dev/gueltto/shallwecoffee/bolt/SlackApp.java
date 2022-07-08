@@ -57,7 +57,7 @@ public class SlackApp {
     @Bean
     public App initSlackApp() {
         App app = new App();
-        // 채널별 커피챗
+        // 채널 선택하여 커피챗
         app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
         app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
@@ -130,11 +130,12 @@ public class SlackApp {
                 .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT).text("제출하기").emoji(true)))
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(asBlocks(
-                        section(
-                                sectionBuilder -> sectionBuilder.blockId(SELECT_CHANNEL_ID)
-                                        .text(markdownText("커피챗 채널"))
-                                        .accessory(channelsSelect(channelsSelectBuilder -> channelsSelectBuilder.actionId(SELECT_CHANNEL_ACTION_ID)))
-                        ),
+                        input(sectionBuilder -> sectionBuilder.blockId(SELECT_CHANNEL_ID)
+                                .label(plainText("커피챗 채널"))
+                                .element(channelsSelect(channelsSelectBuilder -> channelsSelectBuilder.actionId(SELECT_CHANNEL_ACTION_ID)
+                                                .placeholder(plainText("채널을 선택해주세요!"))
+                                        )
+                                )),
                         // 모임 날짜
                         input(input -> input.blockId(CHAT_DATE_ID)
                                 .label(plainText(pt -> pt.text("모임 날짜는 언제인가요?").emoji(true)))
