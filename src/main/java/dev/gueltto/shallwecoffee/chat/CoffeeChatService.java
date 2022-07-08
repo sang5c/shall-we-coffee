@@ -21,8 +21,15 @@ public class CoffeeChatService {
     private final MemberService memberService;
     private final SlackApi slackApi;
 
+    public void startCoffeeChat(String channelId, String message) {
+        slackApi.sendMessage(channelId, message);
+    }
+
+    /**
+     * 운영진 관리에 의한 커피챗 시도
+     */
     @Async
-    public void startCoffeeChat(int count, String message) {
+    public void startManagedCoffeeChat(int count, String message) {
         // TODO: 지정한 채널에 뿌릴지, 전체 채널에 뿌릴지 받으면 좋을듯!
         //  아니면 봇이 들어있는 채널만 출력한다던지?
         List<SlackChannel> channels = slackApi.findChannels("3_");

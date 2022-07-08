@@ -1,5 +1,6 @@
 package dev.gueltto.shallwecoffee.bolt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.app_backend.interactive_components.payload.GlobalShortcutPayload;
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.handler.builtin.GlobalShortcutHandler;
@@ -15,7 +16,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Map;
 
 import static com.slack.api.model.block.Blocks.*;
@@ -40,10 +40,17 @@ public class SlackApp {
     // 특정 채널 커피챗 이벤트 ID
     private static final String CHAN_CHAT_MESSAGE = "channel_coffee_chat";
     private static final String CHAN_CHAT_MESSAGE_SUBMIT = "channel_coffee_chat_submit";
-    private static final String PLACE_INPUT = "place_input";
-    private static final String PLACE_INPUT_ACTION = "place_input_action";
-    private static final String ANNOUNCEMENT_INPUT = "announcement_input";
-    private static final String ANNOUNCEMENT_INPUT_ACTION = "announcement_input_action";
+    private static final String PLACE_INPUT_ID = "place_input";
+    private static final String PLACE_INPUT_ACTION_ID = "place_input_action";
+    private static final String ANNOUNCEMENT_INPUT_ID = "announcement_input";
+    private static final String ANNOUNCEMENT_INPUT_ACTION_ID = "announcement_input_action";
+
+    private static final String CHAT_DATE_ID = "CHAT_DATE_ID";
+    private static final String CHAT_DATE_ACTION_ID = "CHAT_DATE_ACTION_ID";
+    private static final String DEADLINE_DATE_ID = "DEADLINE_DATE_ID";
+    private static final String DEADLINE_DATE_ACTION_ID = "DEADLINE_DATE_ACTION_ID";
+    private static final String SELECT_CHANNEL_ID = "SELECT_CHANNEL_ID";
+    private static final String SELECT_CHANNEL_ACTION_ID = "SELECT_CHANNEL_ACTION_ID";
 
     private final CoffeeChatService coffeeChatService;
 
@@ -54,8 +61,24 @@ public class SlackApp {
         app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
         app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
-            log.debug("values: " + values);
+            // TODO: Object.fromValues() 변환해서 사용하기
+            StringBuilder message = new StringBuilder();
+            String requestUserId = req.getPayload().getUser().getId();
+            message.append("user: " + requestUserId + "\n");
+            String selectedChannel = values.get(SELECT_CHANNEL_ID).get(SELECT_CHANNEL_ACTION_ID).getSelectedChannel();
+            message.append("선택한 채널: " + selectedChannel + "\n");
+            String selectedMeetingDate = values.get(CHAT_DATE_ID).get(CHAT_DATE_ACTION_ID).getSelectedDate();
+            message.append("모임일: " + selectedMeetingDate + "\n");
+            String selectedDeadlineDate = values.get(DEADLINE_DATE_ID).get(DEADLINE_DATE_ACTION_ID).getSelectedDate();
+            message.append("마감일: " + selectedDeadlineDate + "\n");
+            String place = values.get(PLACE_INPUT_ID).get(PLACE_INPUT_ACTION_ID).getValue();
+            message.append("장소: " + place + "\n");
+            String announcement = values.get(ANNOUNCEMENT_INPUT_ID).get(ANNOUNCEMENT_INPUT_ACTION_ID).getValue();
+            message.append("하고싶은말: " + announcement + "\n");
 
+            coffeeChatService.startCoffeeChat(selectedChannel, message.toString());
+            // payload={"team":{"id":"T03CBP0L89L","domain":"geultto7"},
+            // "user":{"id":"U03CM3U0LP6","username":"skah321","name":"skah321","team_id":"T03CBP0L89L"},
             return ctx.ack();
         });
 
@@ -69,10 +92,12 @@ public class SlackApp {
             String inputValue = values.get(INPUT_ID).get(INPUT_ACTION_ID).getValue();
             log.info("count: {}, notice: {}", count, inputValue);
 
-            coffeeChatService.startCoffeeChat(Integer.parseInt(count), inputValue);
+            coffeeChatService.startManagedCoffeeChat(Integer.parseInt(count), inputValue);
             return ctx.ack();
         });
+
         // warn 출력을 막기 위한 ack
+        app.blockAction(SELECT_CHANNEL_ACTION_ID, (req, ctx) -> ctx.ack());
         app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
 
         return app;
@@ -89,7 +114,7 @@ public class SlackApp {
                                 .view(buildScheduleView())
                         );
                 // Print response
-                logger.info("response: {}", response);
+                // logger.info("response: {}", response);
             } catch (IOException | SlackApiException e) {
                 logger.error("error: {}", e.getMessage(), e);
             }
@@ -105,33 +130,38 @@ public class SlackApp {
                 .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT).text("제출하기").emoji(true)))
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(asBlocks(
+                        section(
+                                sectionBuilder -> sectionBuilder.blockId(SELECT_CHANNEL_ID)
+                                        .text(markdownText("커피챗 채널"))
+                                        .accessory(channelsSelect(channelsSelectBuilder -> channelsSelectBuilder.actionId(SELECT_CHANNEL_ACTION_ID)))
+                        ),
                         // 모임 날짜
-                        input(input -> input.blockId("CHAT_DATE_ID")
+                        input(input -> input.blockId(CHAT_DATE_ID)
                                 .label(plainText(pt -> pt.text("모임 날짜는 언제인가요?").emoji(true)))
                                 .element(datePicker(datePickerBuilder -> datePickerBuilder
-                                                .actionId("CHAT_DATE_ACTION_ID")
+                                                .actionId(CHAT_DATE_ACTION_ID)
                                                 .initialDate(LocalDateTime.now().toLocalDate().toString())
                                         )
                                 )
                         ),
                         // 마감일
-                        input(input -> input.blockId("DEADLINE_DATE_ID")
+                        input(input -> input.blockId(DEADLINE_DATE_ID)
                                 .label(plainText(pt -> pt.text("참가자를 언제까지 받을까요?").emoji(true)))
                                 .element(datePicker(datePickerBuilder -> datePickerBuilder
-                                                .actionId("DEADLINE_DATE_ACTION_ID")
+                                                .actionId(DEADLINE_DATE_ACTION_ID)
                                                 .initialDate(LocalDateTime.now().plusDays(1).toLocalDate().toString())
                                         )
                                 )
                         ),
                         // 장소
-                        input(input -> input.blockId(PLACE_INPUT)
+                        input(input -> input.blockId(PLACE_INPUT_ID)
                                 .label(plainText(pt -> pt.text("예상 장소").emoji(true)))
-                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(PLACE_INPUT_ACTION)))
+                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(PLACE_INPUT_ACTION_ID)))
                         ),
                         // 하고싶은 말
-                        input(input -> input.blockId(ANNOUNCEMENT_INPUT)
+                        input(input -> input.blockId(ANNOUNCEMENT_INPUT_ID)
                                 .label(plainText(pt -> pt.text("하고싶은 말").emoji(true)))
-                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(ANNOUNCEMENT_INPUT_ACTION).multiline(true)))
+                                .element(plainTextInput(inputBuilder -> inputBuilder.actionId(ANNOUNCEMENT_INPUT_ACTION_ID).multiline(true)))
                         )
                 ))
         );
