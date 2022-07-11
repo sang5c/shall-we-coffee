@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Service
 public class CoffeeChatService {
-    private static final String GROUP_MESSAGE_FORMAT = "\n%d조: %s";
+    private static final String GROUP_MESSAGE_FORMAT = "%d조: %s";
     private static final int FIRST_GROUP_INDEX = 1;
     private final MemberService memberService;
     private final SlackApi slackApi;
@@ -40,7 +41,7 @@ public class CoffeeChatService {
         log.info("헤로쿠 스케줄러 잘 나오나 보자고~");
     }
 
-    private void sendCoffeeMessageByChannel(SlackChannel channel, int headcount, String message) {
+    private void sendCoffeeMessageByChannel(SlackChannel channel, int headcount, String announcement) {
         List<String> channelMemberIds = slackApi.findMemberIds(channel);
         List<String> realMemberIds = excludeVisitors(channel, channelMemberIds);
         log.debug("realMemberIds = " + realMemberIds);
@@ -48,10 +49,12 @@ public class CoffeeChatService {
         Groups groups = Groups.of(realMemberIds, headcount);
         log.info("groups = " + groups);
 
-        String chatMessage = generateChatMessage(message, groups);
+        List<String> messages = generateChatMessages(announcement, groups);
+        log.info("messages: " + messages);
         // 임시로 운영진 채널에만 전송하도록 막는다.
-        // slackApi.sendMessage(channel.getId(), chatMessage);
-        slackApi.sendMessage("C03NU0V4BC2", chatMessage);
+        // messages.forEach(chatMessage -> slackApi.sendMessage(channel.getId(), chatMessage));
+        messages.forEach(chatMessage -> slackApi.sendMessage("C03NU0V4BC2", chatMessage)); // 0_테스트용공개채널
+        // messages.forEach(chatMessage -> slackApi.sendMessage("C03H0UGJGGM", chatMessage));
     }
 
     private List<String> excludeVisitors(SlackChannel slackChannel, List<String> memberIds) {
@@ -61,17 +64,19 @@ public class CoffeeChatService {
                 .toList();
     }
 
-    private String generateChatMessage(String message, Groups groups) {
-        StringBuilder coffeeMessage = new StringBuilder(message);
-        coffeeMessage.append("\n");
+    private List<String> generateChatMessages(String message, Groups groups) {
+        List<String> coffeeMessages = new ArrayList<>();
+        coffeeMessages.add(message + "\n");
+        // StringBuilder coffeeMessage = new StringBuilder(message);
+        // coffeeMessage.append("\n");
 
         List<String> mentions = groups.toMentions();
 
         AtomicInteger count = new AtomicInteger(FIRST_GROUP_INDEX);
-        mentions.forEach(mentionStr -> coffeeMessage.append(
+        mentions.forEach(mentionStr -> coffeeMessages.add(
                 String.format(GROUP_MESSAGE_FORMAT, count.getAndIncrement(), mentionStr))
         );
-        return coffeeMessage.toString();
+        return coffeeMessages;
     }
 
     public void startCoffeeChat(CoffeeChat coffeeChat) {
