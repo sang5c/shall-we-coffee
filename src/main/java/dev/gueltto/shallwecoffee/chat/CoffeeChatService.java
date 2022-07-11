@@ -51,7 +51,7 @@ public class CoffeeChatService {
         String chatMessage = generateChatMessage(message, groups);
         // 임시로 운영진 채널에만 전송하도록 막는다.
         // slackApi.sendMessage(channel.getId(), chatMessage);
-        slackApi.sendMessage("C03N9S7G4HG", chatMessage);
+        slackApi.sendMessage("C03NU0V4BC2", chatMessage);
     }
 
     private List<String> excludeVisitors(SlackChannel slackChannel, List<String> memberIds) {
@@ -76,6 +76,8 @@ public class CoffeeChatService {
 
     public void startCoffeeChat(CoffeeChat coffeeChat) {
         // TODO: 이 정보 DB 저장, 스케주럴에서 확인해서 종료 처리해줘야 함.
+        // 1. 채널 아이디만 저장하거나
+        // 2. 채널 아이디로 메시지 보낸거 읽어서 메시지 ID를 저장한다.
         slackApi.sendMessage(coffeeChat.getChannelId(), coffeeChat.toMessage());
     }
 }
