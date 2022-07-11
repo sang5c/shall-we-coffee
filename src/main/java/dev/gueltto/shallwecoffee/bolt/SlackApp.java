@@ -1,9 +1,9 @@
 package dev.gueltto.shallwecoffee.bolt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.app_backend.interactive_components.payload.GlobalShortcutPayload;
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.handler.builtin.GlobalShortcutHandler;
+import com.slack.api.bolt.handler.builtin.ViewSubmissionHandler;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.view.View;
@@ -14,6 +14,7 @@ import dev.gueltto.shallwecoffee.chat.SlackMember;
 import dev.gueltto.shallwecoffee.chat.slackapi.SlackApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -63,9 +64,24 @@ public class SlackApp {
         App app = new App();
         // 채널 선택하여 커피챗
         app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
-        app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, (req, ctx) -> {
+        app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, channelChatSubmissionHandler());
+
+        // 전체 "3_" 채널별 커피챗
+        app.globalShortcut(COFFEE_MESSAGE, openModal());
+        app.viewSubmission(MESSAGE_SUBMIT, allChannelSubmissionHandler());
+
+        // warn 출력을 막기 위한 ack
+        app.blockAction(SELECT_CHANNEL_ACTION_ID, (req, ctx) -> ctx.ack());
+        app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
+
+        return app;
+    }
+
+    private ViewSubmissionHandler channelChatSubmissionHandler() {
+        return (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
 
+            log.info("@@@@@@@@@@@@@ payload: " + req.getPayload());
             String requestUserId = req.getPayload().getUser().getId();
             SlackMember member = slackApi.findUserInfo(requestUserId);
 
@@ -79,14 +95,12 @@ public class SlackApp {
             );
 
             coffeeChatService.startCoffeeChat(coffeeChat);
-            // payload={"team":{"id":"T03CBP0L89L","domain":"geultto7"},
-            // "user":{"id":"U03CM3U0LP6","username":"skah321","name":"skah321","team_id":"T03CBP0L89L"},
             return ctx.ack();
-        });
+        };
+    }
 
-        // 전체 "3_" 채널별 커피챗
-        app.globalShortcut(COFFEE_MESSAGE, openModal());
-        app.viewSubmission(MESSAGE_SUBMIT, (req, ctx) -> {
+    private ViewSubmissionHandler allChannelSubmissionHandler() {
+        return (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
             log.debug("values: " + values);
 
@@ -96,13 +110,7 @@ public class SlackApp {
 
             coffeeChatService.startManagedCoffeeChat(Integer.parseInt(count), inputValue);
             return ctx.ack();
-        });
-
-        // warn 출력을 막기 위한 ack
-        app.blockAction(SELECT_CHANNEL_ACTION_ID, (req, ctx) -> ctx.ack());
-        app.blockAction(SELECTION_ACTION_ID, (req, ctx) -> ctx.ack());
-
-        return app;
+        };
     }
 
     private GlobalShortcutHandler openScheduleModal() {
@@ -132,6 +140,7 @@ public class SlackApp {
                 .submit(viewSubmit(submitBuilder -> submitBuilder.type(PLAIN_TEXT).text("제출하기").emoji(true)))
                 .close(viewClose(closeBuilder -> closeBuilder.type(PLAIN_TEXT).text("닫기").emoji(true)))
                 .blocks(asBlocks(
+                        // TODO: 원하는 채널만 보여주려면 https://api.slack.com/reference/block-kit/block-elements#external_multi_select 참고하면 될듯.
                         input(sectionBuilder -> sectionBuilder.blockId(SELECT_CHANNEL_ID)
                                 .label(plainText("커피챗 채널"))
                                 .element(channelsSelect(channelsSelectBuilder -> channelsSelectBuilder.actionId(SELECT_CHANNEL_ACTION_ID)
