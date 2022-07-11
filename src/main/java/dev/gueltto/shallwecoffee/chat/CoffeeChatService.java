@@ -78,6 +78,13 @@ public class CoffeeChatService {
         // TODO: 이 정보 DB 저장, 스케주럴에서 확인해서 종료 처리해줘야 함.
         // 1. 채널 아이디만 저장하거나
         // 2. 채널 아이디로 메시지 보낸거 읽어서 메시지 ID를 저장한다.
+
+        // TODO:
+        // 메시지를 전송한 후
+        // 채널에서 메시지 ID를 읽어서
+        // 커피챗 마감 정보와 함께 DB에 저장한다.
+        // 스케줄러에서 마감 정보를 읽어 마감 처리를 시도한다.
+        // 마감 처리에서 해야하는 작업은 리마인드 & 참가자 멘션 메시지 전송
         slackApi.sendMessage(coffeeChat.getChannelId(), coffeeChat.toMessage());
     }
 }
