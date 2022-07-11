@@ -37,11 +37,11 @@ public class CoffeeChat {
     public String toMessage() {
         StringBuilder message = new StringBuilder();
         message.append(announcement);
-        message.append("\n- *커피챗 희망 날짜:* " + chatDate);
-        message.append("\n- *모집 마감일:* " + deadline);
-        message.append("\n- *예상 장소:* " + place);
-        message.append("\n- *요청자:* " + slackMember.toMention());
-        message.append("\n\n참석 / 불참 이모지를 남겨주세요!");
+        message.append("\n* *커피챗 희망 날짜:* " + chatDate);
+        message.append("\n* *모집 마감일:* " + deadline);
+        message.append("\n* *예상 장소:* " + place);
+        message.append("\n* *요청자:* " + slackMember.toMention());
+        message.append("\n\n참석 이모지를 남겨주세요!");
 
         return message.toString();
     }
