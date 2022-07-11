@@ -61,6 +61,7 @@ public class ProdSlackApi implements SlackApi {
         }
     }
 
+    @Override
     public SlackMember findUserInfo(String userId) {
         try {
             User user = slackClient.usersInfo(req -> req.user(userId))

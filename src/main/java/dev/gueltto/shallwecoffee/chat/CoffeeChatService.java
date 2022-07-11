@@ -21,10 +21,6 @@ public class CoffeeChatService {
     private final MemberService memberService;
     private final SlackApi slackApi;
 
-    public void startCoffeeChat(String channelId, String message) {
-        slackApi.sendMessage(channelId, message);
-    }
-
     /**
      * 운영진 관리에 의한 커피챗 시도
      */
@@ -76,5 +72,10 @@ public class CoffeeChatService {
                 String.format(GROUP_MESSAGE_FORMAT, count.getAndIncrement(), mentionStr))
         );
         return coffeeMessage.toString();
+    }
+
+    public void startCoffeeChat(CoffeeChat coffeeChat) {
+        // TODO: 이 정보 DB 저장, 스케주럴에서 확인해서 종료 처리해줘야 함.
+        slackApi.sendMessage(coffeeChat.getChannelId(), coffeeChat.toMessage());
     }
 }

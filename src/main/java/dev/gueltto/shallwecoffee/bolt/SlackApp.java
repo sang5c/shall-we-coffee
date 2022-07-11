@@ -8,7 +8,10 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewState;
+import dev.gueltto.shallwecoffee.chat.CoffeeChat;
 import dev.gueltto.shallwecoffee.chat.CoffeeChatService;
+import dev.gueltto.shallwecoffee.chat.SlackMember;
+import dev.gueltto.shallwecoffee.chat.slackapi.SlackApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +56,7 @@ public class SlackApp {
     private static final String SELECT_CHANNEL_ACTION_ID = "SELECT_CHANNEL_ACTION_ID";
 
     private final CoffeeChatService coffeeChatService;
+    private final SlackApi slackApi;
 
     @Bean
     public App initSlackApp() {
@@ -61,22 +65,20 @@ public class SlackApp {
         app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
         app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
-            // TODO: Object.fromValues() 변환해서 사용하기
-            StringBuilder message = new StringBuilder();
-            String requestUserId = req.getPayload().getUser().getId();
-            message.append("user: " + requestUserId + "\n");
-            String selectedChannel = values.get(SELECT_CHANNEL_ID).get(SELECT_CHANNEL_ACTION_ID).getSelectedChannel();
-            message.append("선택한 채널: " + selectedChannel + "\n");
-            String selectedMeetingDate = values.get(CHAT_DATE_ID).get(CHAT_DATE_ACTION_ID).getSelectedDate();
-            message.append("모임일: " + selectedMeetingDate + "\n");
-            String selectedDeadlineDate = values.get(DEADLINE_DATE_ID).get(DEADLINE_DATE_ACTION_ID).getSelectedDate();
-            message.append("마감일: " + selectedDeadlineDate + "\n");
-            String place = values.get(PLACE_INPUT_ID).get(PLACE_INPUT_ACTION_ID).getValue();
-            message.append("장소: " + place + "\n");
-            String announcement = values.get(ANNOUNCEMENT_INPUT_ID).get(ANNOUNCEMENT_INPUT_ACTION_ID).getValue();
-            message.append("하고싶은말: " + announcement + "\n");
 
-            coffeeChatService.startCoffeeChat(selectedChannel, message.toString());
+            String requestUserId = req.getPayload().getUser().getId();
+            SlackMember member = slackApi.findUserInfo(requestUserId);
+
+            CoffeeChat coffeeChat = CoffeeChat.create(
+                    member,
+                    values.get(SELECT_CHANNEL_ID).get(SELECT_CHANNEL_ACTION_ID).getSelectedChannel(),
+                    values.get(CHAT_DATE_ID).get(CHAT_DATE_ACTION_ID).getSelectedDate(),
+                    values.get(DEADLINE_DATE_ID).get(DEADLINE_DATE_ACTION_ID).getSelectedDate(),
+                    values.get(PLACE_INPUT_ID).get(PLACE_INPUT_ACTION_ID).getValue(),
+                    values.get(ANNOUNCEMENT_INPUT_ID).get(ANNOUNCEMENT_INPUT_ACTION_ID).getValue()
+            );
+
+            coffeeChatService.startCoffeeChat(coffeeChat);
             // payload={"team":{"id":"T03CBP0L89L","domain":"geultto7"},
             // "user":{"id":"U03CM3U0LP6","username":"skah321","name":"skah321","team_id":"T03CBP0L89L"},
             return ctx.ack();

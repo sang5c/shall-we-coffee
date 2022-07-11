@@ -3,6 +3,7 @@ package dev.gueltto.shallwecoffee.chat.slackapi;
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import dev.gueltto.shallwecoffee.chat.SlackChannel;
+import dev.gueltto.shallwecoffee.chat.SlackMember;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -40,5 +41,10 @@ public class LocalSlackApi implements SlackApi {
                 "id1", "id2", "id3", "id4", "id5",
                 "id6", "id7", "id8", "id9", "USA5B2R61", "id10"
         );
+    }
+
+    @Override
+    public SlackMember findUserInfo(String userId) {
+        return null;
     }
 }
