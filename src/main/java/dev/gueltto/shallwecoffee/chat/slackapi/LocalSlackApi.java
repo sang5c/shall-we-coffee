@@ -2,6 +2,7 @@ package dev.gueltto.shallwecoffee.chat.slackapi;
 
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
+import com.slack.api.model.Message;
 import dev.gueltto.shallwecoffee.chat.SlackChannel;
 import dev.gueltto.shallwecoffee.chat.SlackMember;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,11 @@ public class LocalSlackApi implements SlackApi {
 
     @Override
     public SlackMember findUserInfo(String userId) {
+        return null;
+    }
+
+    @Override
+    public List<Message> searchMessages(String query) {
         return null;
     }
 }
