@@ -1,5 +1,6 @@
 package dev.gueltto.shallwecoffee.chat;
 
+import dev.gueltto.shallwecoffee.chat.repository.ChatEntity;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -48,5 +49,9 @@ public class CoffeeChat {
         message.append("\n\n참석 이모지를 남겨주세요!");
 
         return message.toString();
+    }
+
+    public ChatEntity toEntity() {
+        return ChatEntity.create(slackMember.getId(), channelId, chatDate, deadline);
     }
 }

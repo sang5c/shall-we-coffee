@@ -62,11 +62,11 @@ public class SlackApp {
     public App initSlackApp() {
         App app = new App();
         // 채널 선택하여 커피챗
-        // app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
-        app.globalShortcut(CHAN_CHAT_MESSAGE, (globalShortcutRequest, globalShortcutContext) -> {
-            slackApi.searchMessages("C03HGF3V4JD");
-            return globalShortcutContext.ack();
-        });
+        app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
+        // app.globalShortcut(CHAN_CHAT_MESSAGE, (globalShortcutRequest, globalShortcutContext) -> {
+        //     slackApi.searchMessages("C03HGF3V4JD");
+        //     return globalShortcutContext.ack();
+        // });
         app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, channelChatSubmissionHandler());
 
         // 전체 "3_" 채널별 커피챗

@@ -2,6 +2,8 @@ package dev.gueltto.shallwecoffee.chat;
 
 import com.slack.api.model.Message;
 import com.slack.api.model.Reaction;
+import dev.gueltto.shallwecoffee.chat.repository.ChatEntity;
+import dev.gueltto.shallwecoffee.chat.repository.ChatRepository;
 import dev.gueltto.shallwecoffee.chat.slackapi.SlackApi;
 import dev.gueltto.shallwecoffee.member.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class CoffeeChatService {
     private static final int FIRST_GROUP_INDEX = 1;
     private final MemberService memberService;
     private final SlackApi slackApi;
+    private final ChatRepository chatRepository;
 
     /**
      * 운영진 관리에 의한 커피챗 시도
@@ -118,27 +121,13 @@ public class CoffeeChatService {
         return coffeeMessages;
     }
 
+    // TODO
+    //   메시지 읽으려면 conversation.history로 읽는듯?
+    //   참고 이어서 하기 https://api.slack.com/messaging/retrieving#other_individual_messages
+    //   앱 멘션도 고려하기
     public void startCoffeeChat(CoffeeChat coffeeChat) {
-        // TODO: 이 정보 DB 저장, 스케주럴에서 확인해서 종료 처리해줘야 함.
-        // 1. 채널 아이디만 저장하거나
-        // 2. 채널 아이디로 메시지 보낸거 읽어서 메시지 ID를 저장한다.
-
-        // TODO:
-        // 메시지를 전송한 후
-        // 채널에서 메시지 ID를 읽어서
-        // 커피챗 마감 정보와 함께 DB에 저장한다.
-        // 스케줄러에서 마감 정보를 읽어 마감 처리를 시도한다.
-        // 마감 처리에서 해야하는 작업은 리마인드 & 참가자 멘션 메시지 전송
-
-        // TODO 2:
-        //  user.conversations 읽어서 들어가있는 채널만 탐색.
-        //  1. 메시지 작성자가 봇의 ID와 일치하고
-        //  2. 특정 이모지가 달려있고
-        //  3. 마감 이모지가 달려있지 않은 경
-
-        // 메시지 읽으려면 conversation.history로 읽는듯?
-        // 참고 이어서 하기 https://api.slack.com/messaging/retrieving#other_individual_messages
-        // 앱 멘션도 고려하기
+        ChatEntity chatEntity = coffeeChat.toEntity();
+        chatRepository.save(chatEntity);
         slackApi.sendMessage(coffeeChat.getChannelId(), coffeeChat.toMessage());
     }
 }
