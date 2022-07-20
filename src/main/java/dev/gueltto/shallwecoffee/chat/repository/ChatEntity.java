@@ -30,4 +30,8 @@ public class ChatEntity {
     public static ChatEntity create(String userId, String channelId, LocalDate chatDate, LocalDate deadline) {
         return new ChatEntity(userId, channelId, chatDate, deadline);
     }
+
+    public String getChannelId() {
+        return channelId;
+    }
 }

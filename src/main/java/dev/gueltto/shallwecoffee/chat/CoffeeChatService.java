@@ -12,8 +12,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,26 +44,35 @@ public class CoffeeChatService {
 
     @Scheduled(cron = "0 35 09 * * ?", zone = "Asia/Seoul")
     public void schedule() {
-        log.info("now: {}", LocalDateTime.now());
+        LocalDate targetDate = LocalDate.now();
+        log.info("now: {}", targetDate);
         log.info("헤로쿠 스케줄러 잘 나오나 보자고~");
 
-        // TODO: 등록시에 "마감일"과 "채널 정보"를 DB에 담는다.
-        // 한 채널에 마감되지 않은 메시지가 여러개일때 구분해낼 방안이 필요하다.
-        // 가능하면 등록시에 뭔가 방법이 있으면 좋은데..
-        // 등록시에 셀프 멘션으로 정보를 받을 수 있는지 확인해보자.
+        List<ChatEntity> targetChats = chatRepository.findByDeadlineEquals(targetDate);
 
-        // 아니면 그냥 어렵게 생각하지 말고 "마감일: yyyy-MM-dd" equals 검사해서 처리하기.
+        List<String> targetChannels = targetChats.stream()
+                .map(ChatEntity::getChannelId)
+                .toList();
 
-        // TODO: 1. DB에서 관리대상 채널 조회
-        //       2. 메시지를 읽어서 관련 정보 확인
-        //       3. 마감 처리
-        //       4. DB 값 조정
-        /**
-         * bot이 작성한 메시지는 message id로 식별이 불가능하다.
-         */
-        List<Message> messages = slackApi.searchMessages("channel").stream()
+        List<Message> targetMessages = targetChannels.stream()
+                .map(channelId -> searchTargetMessages(channelId, targetDate))
+                .flatMap(Collection::stream)
+                .toList();
+        // TODO:
+        //  1. 타겟 메시지에 대해 쓰레드로 특정 이모지 남긴 사람들을 멘션한다.
+        //  2. 메시지에 마감 이모지를 추가한다.
+        //  3. DB에서 삭제한다.
+        targetMessages.forEach(message -> slackApi.sendMessage(message.getChannel(), message.getText().split("\n")[0]));
+    }
+
+    /**
+     * bot이 작성한 메시지는 message id로 식별이 불가능하다.
+     */
+    private List<Message> searchTargetMessages(String channelId, LocalDate targetDate) {
+        String deadlineText = "*마감일*: " + targetDate.toString();
+        return slackApi.searchMessages(channelId).stream()
                 .filter(this::isBotMessage)
-                .filter(message -> Objects.nonNull(message.getReactions()))
+                .filter(message -> message.getText().contains(deadlineText))
                 .filter(message -> notClosed(message.getReactions()))
                 .toList();
     }
@@ -79,6 +89,10 @@ public class CoffeeChatService {
      * 마감 이모지가 없는 경우 스케줄러 관리 대상이다.
      */
     private boolean notClosed(List<Reaction> reactions) {
+        if (Objects.isNull(reactions)) {
+            return false;
+        }
+
         return reactions.stream()
                 .noneMatch(reaction -> Objects.equals(reaction.getName(), "best"));
     }
@@ -121,10 +135,7 @@ public class CoffeeChatService {
         return coffeeMessages;
     }
 
-    // TODO
-    //   메시지 읽으려면 conversation.history로 읽는듯?
-    //   참고 이어서 하기 https://api.slack.com/messaging/retrieving#other_individual_messages
-    //   앱 멘션도 고려하기
+    // TODO: 봇 멘션도 고려하기
     public void startCoffeeChat(CoffeeChat coffeeChat) {
         ChatEntity chatEntity = coffeeChat.toEntity();
         chatRepository.save(chatEntity);
