@@ -14,7 +14,6 @@ import dev.gueltto.shallwecoffee.chat.SlackMember;
 import dev.gueltto.shallwecoffee.chat.slackapi.SlackApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,35 +25,12 @@ import static com.slack.api.model.block.Blocks.*;
 import static com.slack.api.model.block.composition.BlockCompositions.*;
 import static com.slack.api.model.block.element.BlockElements.*;
 import static com.slack.api.model.view.Views.*;
+import static dev.gueltto.shallwecoffee.bolt.Constants.*;
 
 @RequiredArgsConstructor
 @Slf4j
 @Configuration
 public class SlackApp {
-
-    // 전체 커피챗 이벤트 ID
-    private static final String COFFEE_MESSAGE = "coffee_message";
-    private static final String MESSAGE_SUBMIT = "coffee_message_submit";
-    private static final String PLAIN_TEXT = "plain_text";
-    private static final String INPUT_ID = "input_id";
-    private static final String INPUT_ACTION_ID = "input_action_id";
-    private static final String SELECTION_ID = "count-block";
-    private static final String SELECTION_ACTION_ID = "count-selection-action";
-
-    // 특정 채널 커피챗 이벤트 ID
-    private static final String CHAN_CHAT_MESSAGE = "channel_coffee_chat";
-    private static final String CHAN_CHAT_MESSAGE_SUBMIT = "channel_coffee_chat_submit";
-    private static final String PLACE_INPUT_ID = "place_input";
-    private static final String PLACE_INPUT_ACTION_ID = "place_input_action";
-    private static final String ANNOUNCEMENT_INPUT_ID = "announcement_input";
-    private static final String ANNOUNCEMENT_INPUT_ACTION_ID = "announcement_input_action";
-
-    private static final String CHAT_DATE_ID = "CHAT_DATE_ID";
-    private static final String CHAT_DATE_ACTION_ID = "CHAT_DATE_ACTION_ID";
-    private static final String DEADLINE_DATE_ID = "DEADLINE_DATE_ID";
-    private static final String DEADLINE_DATE_ACTION_ID = "DEADLINE_DATE_ACTION_ID";
-    private static final String SELECT_CHANNEL_ID = "SELECT_CHANNEL_ID";
-    private static final String SELECT_CHANNEL_ACTION_ID = "SELECT_CHANNEL_ACTION_ID";
 
     private final CoffeeChatService coffeeChatService;
     private final SlackApi slackApi;
@@ -63,12 +39,12 @@ public class SlackApp {
     public App initSlackApp() {
         App app = new App();
         // 채널 선택하여 커피챗
-        app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal());
-        app.viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, channelChatSubmissionHandler());
+        app.globalShortcut(CHAN_CHAT_MESSAGE, openScheduleModal())
+                .viewSubmission(CHAN_CHAT_MESSAGE_SUBMIT, channelChatSubmissionHandler());
 
         // 전체 "3_" 채널별 커피챗
-        app.globalShortcut(COFFEE_MESSAGE, openModal());
-        app.viewSubmission(MESSAGE_SUBMIT, allChannelSubmissionHandler());
+        app.globalShortcut(COFFEE_MESSAGE, openModal())
+                .viewSubmission(MESSAGE_SUBMIT, allChannelSubmissionHandler());
 
         // warn 출력을 막기 위한 ack
         app.blockAction(SELECT_CHANNEL_ACTION_ID, (req, ctx) -> ctx.ack());
@@ -80,8 +56,6 @@ public class SlackApp {
     private ViewSubmissionHandler channelChatSubmissionHandler() {
         return (req, ctx) -> {
             Map<String, Map<String, ViewState.Value>> values = req.getPayload().getView().getState().getValues();
-
-            log.info("@@@@@@@@@@@@@ payload: " + req.getPayload());
             String requestUserId = req.getPayload().getUser().getId();
             SlackMember member = slackApi.findUserInfo(requestUserId);
 

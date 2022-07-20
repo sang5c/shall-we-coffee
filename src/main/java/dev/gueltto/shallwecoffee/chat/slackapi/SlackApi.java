@@ -1,5 +1,6 @@
 package dev.gueltto.shallwecoffee.chat.slackapi;
 
+import com.slack.api.model.Message;
 import dev.gueltto.shallwecoffee.chat.SlackChannel;
 import dev.gueltto.shallwecoffee.chat.SlackMember;
 
@@ -13,4 +14,6 @@ public interface SlackApi {
     List<String> findMemberIds(SlackChannel channel);
 
     SlackMember findUserInfo(String userId);
+
+    List<Message> searchMessages(String channel);
 }
